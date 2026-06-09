@@ -1,66 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
-import { postChat } from '../api';
-
-interface Citation {
-  filename: string;
-  page: number;
-  period: string | null;
-  fund_name: string | null;
-  chunk_text: string;
-  file_path: string;
-}
-
-interface Message {
-  role: 'user' | 'assistant';
-  text: string;
-  citations?: Citation[];
-  is_out_of_corpus?: boolean;
-}
-
-const STORAGE_KEY = 'altius_chat_messages';
-
-function loadMessages(): Message[] {
-  try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as Message[]) : [];
-  } catch {
-    return [];
-  }
-}
+import { useChat } from '../context/ChatContext';
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>(loadMessages);
+  const { messages, loading, send } = useChat();
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  }, [messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const send = async () => {
+  const handleSend = () => {
     const q = input.trim();
     if (!q || loading) return;
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: q }]);
-    setLoading(true);
-    try {
-      const data = await postChat(q);
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        text: data.answer,
-        citations: data.citations,
-        is_out_of_corpus: data.is_out_of_corpus,
-      }]);
-    } catch (e) {
-      setMessages(prev => [...prev, { role: 'assistant', text: `Error: ${e}` }]);
-    } finally {
-      setLoading(false);
-    }
+    send(q);
   };
 
   return (
@@ -98,11 +52,11 @@ export default function Chat() {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Ask about the fund documents…"
           disabled={loading}
         />
-        <button onClick={send} disabled={loading || !input.trim()}>Send</button>
+        <button onClick={handleSend} disabled={loading || !input.trim()}>Send</button>
       </div>
     </div>
   );
