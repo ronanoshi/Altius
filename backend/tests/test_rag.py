@@ -47,6 +47,74 @@ def _mock_llm(answer: str) -> BaseLLMClient:
 # Unit tests
 # ---------------------------------------------------------------------------
 
+def test_cover_page_detection():
+    """Cover/title pages are detected and content pages are not."""
+    from app.rag.chunker import _is_cover_page
+
+    cover = "\n".join([
+        "Fund Alpha, L.P.",
+        "Quarterly Investor Update",
+        "Volume 1 — Portfolio Review",
+        "REPORTING PERIOD",
+        "Q3 2021 — Quarter ended September 30, 2021",
+        "PREPARED FOR",
+        "Evergreen Family Office LP",
+        "GENERAL PARTNER",
+        "Alpha Capital Management",
+        "ASSET CLASS",
+        "Alternatives / Private Equity",
+    ])
+    assert _is_cover_page(cover) is True
+
+    content = "\n".join([
+        "Portfolio Performance",
+        "During the quarter the fund experienced meaningful valuation improvements.",
+        "Three portfolio companies reported EBITDA growth in excess of 20% year-over-year.",
+        "One position was marked down following a revenue shortfall in the consumer segment.",
+        "The manager notes that elevated interest rates continue to pressure leveraged buyout returns.",
+        "Subscription credit facility utilization averaged 45% over the quarter, down from 60% in Q2.",
+        "The GP does not anticipate further drawdowns before year-end based on current deployment pace.",
+    ])
+    assert _is_cover_page(content) is False
+
+
+@pytest.mark.asyncio
+async def test_cover_pages_excluded_from_chunks(tmp_path):
+    """A PDF whose first page is a cover and second is content yields only 1 chunk."""
+    from app.rag.chunker import chunk_pdf
+
+    cover_text = "\n".join([
+        "Fund Alpha, L.P.",
+        "Quarterly Investor Update",
+        "REPORTING PERIOD",
+        "Q3 2021",
+        "PREPARED FOR",
+        "Evergreen Family Office LP",
+        "GENERAL PARTNER",
+        "Alpha Capital Management",
+    ])
+    content_text = (
+        "During the quarter three portfolio companies reported strong EBITDA growth. "
+        "The subscription credit facility was utilised at an average rate of 45%, "
+        "down from 60% in the prior quarter. One position was marked down after a "
+        "revenue shortfall in the consumer segment impacted projected returns."
+    )
+
+    import fitz
+    pdf = tmp_path / "mixed.pdf"
+    doc = fitz.open()
+    p1 = doc.new_page()
+    p1.insert_text((50, 100), cover_text, fontsize=10)
+    p2 = doc.new_page()
+    p2.insert_text((50, 100), content_text, fontsize=10)
+    doc.save(str(pdf))
+    doc.close()
+
+    chunks = chunk_pdf(pdf, {"file_id": 99, "filename": "mixed.pdf"})
+    assert len(chunks) == 1, f"Expected 1 content chunk, got {len(chunks)}"
+    assert chunks[0].metadata["page"] == "2"
+
+
 @pytest.mark.asyncio
 async def test_ingest_adds_chunks(pipeline, tmp_path):
     """A PDF is chunked by page and stored in ChromaDB."""

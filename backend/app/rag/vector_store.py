@@ -87,6 +87,35 @@ class ChromaVectorStore:
             chunks.append(RetrievedChunk(id=cid, text=doc, metadata=meta, distance=dist))
         return chunks
 
+    def query_in_filenames(self, text: str, filenames: list[str], n_results: int = 4) -> list[RetrievedChunk]:
+        """
+        Semantic query restricted to a specific set of filenames.
+        Used for year-targeted supplemental retrieval.
+        """
+        count = self._collection.count()
+        if count == 0 or not filenames:
+            return []
+        # ChromaDB $in filter on filename metadata
+        try:
+            n_results = min(n_results, count)
+            results = self._collection.query(
+                query_texts=[text],
+                n_results=n_results,
+                where={"filename": {"$in": filenames}},
+                include=["documents", "metadatas", "distances"],
+            )
+            chunks: list[RetrievedChunk] = []
+            for cid, doc, meta, dist in zip(
+                results["ids"][0],
+                results["documents"][0],
+                results["metadatas"][0],
+                results["distances"][0],
+            ):
+                chunks.append(RetrievedChunk(id=cid, text=doc, metadata=meta, distance=dist))
+            return chunks
+        except Exception:
+            return []
+
     def is_out_of_corpus(self, chunks: list[RetrievedChunk]) -> bool:
         """True if the best match is too distant to be a real answer."""
         return not chunks or chunks[0].distance > OUT_OF_CORPUS_DISTANCE
