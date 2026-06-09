@@ -8,14 +8,17 @@ interface Holding {
   file_id: number;
 }
 
+const PAGE_SIZE = 40;
+
 export default function Holdings() {
   const [rows, setRows] = useState<Holding[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     getHoldings()
-      .then(setRows)
+      .then(data => { setRows(data); setPage(0); })
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
   }, []);
@@ -23,7 +26,11 @@ export default function Holdings() {
   const fmt = (v: number | null) =>
     v == null ? '—' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
 
+  // Total always sums the full dataset, not just the current page
   const total = rows.reduce((s, r) => s + (r.current_value ?? 0), 0);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const pageRows = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="page">
@@ -41,7 +48,7 @@ export default function Holdings() {
               </tr>
             </thead>
             <tbody>
-              {rows.map(r => (
+              {pageRows.map(r => (
                 <tr key={r.fund_name}>
                   <td>{r.fund_name}</td>
                   <td>{fmt(r.current_value)}</td>
@@ -55,13 +62,20 @@ export default function Holdings() {
             {rows.length > 0 && (
               <tfoot>
                 <tr>
-                  <td><strong>Total</strong></td>
+                  <td><strong>Total (all {rows.length})</strong></td>
                   <td><strong>{fmt(total)}</strong></td>
                   <td></td>
                 </tr>
               </tfoot>
             )}
           </table>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 0}>← Prev</button>
+              <span style={{ color: '#868e96' }}>Page {page + 1} of {totalPages}</span>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}>Next →</button>
+            </div>
+          )}
         </>
       )}
     </div>

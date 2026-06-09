@@ -17,17 +17,23 @@ const BADGE: Record<string, string> = {
   unknown: 'badge-unknown',
 };
 
+const PAGE_SIZE = 40;
+
 export default function Files() {
   const [files, setFiles] = useState<FileRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     getFiles()
-      .then(setFiles)
+      .then(data => { setFiles(data); setPage(0); })
       .catch(e => setError(String(e)))
       .finally(() => setLoading(false));
   }, []);
+
+  const totalPages = Math.max(1, Math.ceil(files.length / PAGE_SIZE));
+  const pageFiles = files.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
     <div className="page">
@@ -35,37 +41,46 @@ export default function Files() {
       {loading && <p className="loading">Loading…</p>}
       {error && <p className="error">{error}</p>}
       {!loading && !error && (
-        <table>
-          <thead>
-            <tr>
-              <th>Filename</th>
-              <th>Type</th>
-              <th>Confidence</th>
-              <th>Deal</th>
-              <th>Downloaded</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {files.map(f => (
-              <tr key={f.id}>
-                <td>{f.filename}</td>
-                <td>
-                  <span className={`badge ${BADGE[f.file_type] ?? 'badge-unknown'}`}>
-                    {f.file_type}
-                  </span>
-                </td>
-                <td>{f.classifier_confidence != null ? `${(f.classifier_confidence * 100).toFixed(0)}%` : '—'}</td>
-                <td>{f.deal_name}</td>
-                <td>{f.download_date ? f.download_date.slice(0, 10) : '—'}</td>
-                <td><a href={openFileUrl(f.id)} target="_blank" rel="noreferrer">Open</a></td>
+        <>
+          <table>
+            <thead>
+              <tr>
+                <th>Filename</th>
+                <th>Type</th>
+                <th>Confidence</th>
+                <th>Deal</th>
+                <th>Downloaded</th>
+                <th></th>
               </tr>
-            ))}
-            {files.length === 0 && (
-              <tr><td colSpan={6} style={{ textAlign: 'center', color: '#868e96' }}>No files yet — run Sync first.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {pageFiles.map(f => (
+                <tr key={f.id}>
+                  <td>{f.filename}</td>
+                  <td>
+                    <span className={`badge ${BADGE[f.file_type] ?? 'badge-unknown'}`}>
+                      {f.file_type}
+                    </span>
+                  </td>
+                  <td>{f.classifier_confidence != null ? `${(f.classifier_confidence * 100).toFixed(0)}%` : '—'}</td>
+                  <td>{f.deal_name}</td>
+                  <td>{f.download_date ? f.download_date.slice(0, 10) : '—'}</td>
+                  <td><a href={openFileUrl(f.id)} target="_blank" rel="noreferrer">Open</a></td>
+                </tr>
+              ))}
+              {files.length === 0 && (
+                <tr><td colSpan={6} style={{ textAlign: 'center', color: '#868e96' }}>No files yet — run Sync first.</td></tr>
+              )}
+            </tbody>
+          </table>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 0}>← Prev</button>
+              <span style={{ color: '#868e96' }}>Page {page + 1} of {totalPages}</span>
+              <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}>Next →</button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

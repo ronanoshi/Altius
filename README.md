@@ -52,9 +52,9 @@ npm run dev
 1. Open `http://localhost:5173`
 2. Click **Sync Portal** in the nav bar
 3. Watch the live progress stream — the pipeline runs crawl → classify → extract → embed
-4. Navigate to **Holdings** to see extracted fund positions
-5. Navigate to **Chat** to ask questions over the documents
-6. Navigate to **Files** to browse everything that was downloaded
+4. Navigate to **Holdings** to see extracted fund positions (paginated, 40 per page)
+5. Navigate to **Chat** to ask questions over the documents — history is preserved across tab switches and page refreshes within the session
+6. Navigate to **Files** to browse everything that was downloaded (paginated, 40 per page)
 
 ---
 
@@ -65,6 +65,9 @@ frontend/                     React + Vite + TypeScript
   src/
     pages/                    Holdings, Chat, Files
     components/SyncButton     SSE-based sync progress stream
+    context/ChatContext       Chat state provider — persists history in
+                              sessionStorage, keeps in-flight requests
+                              alive across tab navigation
 
 backend/
   main.py                     FastAPI app, CORS, startup wiring
