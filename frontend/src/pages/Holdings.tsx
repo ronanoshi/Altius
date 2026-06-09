@@ -69,11 +69,18 @@ export default function Holdings() {
               </tfoot>
             )}
           </table>
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '1rem' }}>
-              <button onClick={() => setPage(p => p - 1)} disabled={page === 0}>← Prev</button>
-              <span style={{ color: '#868e96' }}>Page {page + 1} of {totalPages}</span>
-              <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}>Next →</button>
+          {rows.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '1rem', fontSize: '0.875rem', color: '#868e96' }}>
+              <span>
+                Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, rows.length)} of {rows.length} results
+              </span>
+              {totalPages > 1 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <button onClick={() => setPage(p => p - 1)} disabled={page === 0}>← Prev</button>
+                  <span>Page {page + 1} of {totalPages}</span>
+                  <button onClick={() => setPage(p => p + 1)} disabled={page >= totalPages - 1}>Next →</button>
+                </div>
+              )}
             </div>
           )}
         </>
