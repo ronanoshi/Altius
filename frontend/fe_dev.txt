@@ -1,0 +1,12 @@
+﻿
+> frontend@0.0.0 dev
+> vite
+
+16:37:13 [vite] (client) Re-optimizing dependencies because lockfile has changed
+Port 5173 is in use, trying another one...
+
+  VITE v8.0.16  ready in 702 ms
+
+  Γ₧£  Local:   http://localhost:5174/
+  Γ₧£  Network: use --host to expose
+16:37:15 [vite] (client) [optimizer] bundling dependencies...
