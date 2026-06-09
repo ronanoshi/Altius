@@ -50,12 +50,11 @@ npm run dev
 ### 3. First run
 
 1. Open `http://localhost:5173`
-2. Log in with the same credentials set in `.env` (`PORTAL_USERNAME` / `PORTAL_PASSWORD`)
-3. Click **Sync Portal** in the nav bar
-4. Watch the live progress stream — the pipeline runs crawl → classify → extract → embed
-5. Navigate to **Holdings** to see extracted fund positions (paginated, 40 per page)
-6. Navigate to **Chat** to ask questions over the documents — history is preserved across tab switches and page refreshes within the session
-7. Navigate to **Files** to browse everything that was downloaded (paginated, 40 per page)
+2. Click **Sync Portal** in the nav bar
+3. Watch the live progress stream — the pipeline runs crawl → classify → extract → embed
+4. Navigate to **Holdings** to see extracted fund positions (paginated, 40 per page)
+5. Navigate to **Chat** to ask questions over the documents — history is preserved across tab switches and page refreshes within the session
+6. Navigate to **Files** to browse everything that was downloaded (paginated, 40 per page)
 
 ---
 
@@ -64,7 +63,7 @@ npm run dev
 ```
 frontend/                     React + Vite + TypeScript
   src/
-    pages/                    Login, Holdings, Chat, Files
+    pages/                    Holdings, Chat, Files
     components/SyncButton     SSE-based sync progress stream
     context/ChatContext       Chat state provider — persists history in
                               sessionStorage, keeps in-flight requests
@@ -98,7 +97,6 @@ backend/
       sync.py                 POST /api/sync  — full pipeline, SSE stream
       holdings.py             GET  /api/holdings
       files.py                GET  /api/files, GET /api/files/{id}/open
-      auth.py                 POST /api/login — validates against .env credentials
       chat.py                 POST /api/chat
 ```
 
@@ -148,4 +146,4 @@ ChromaDB ships with an ONNX-based `all-MiniLM-L6-v2` embedding model that runs l
 
 - **Statement extraction verification**: Spot-check extracted values against the raw `tags` JSON the portal already provides (`classification_data.Amount`). This would give a fast confidence signal without an extra LLM call.
 
-- **Auth on the API**: The frontend login gate uses the portal credentials from `.env` and a `sessionStorage` flag. The backend API endpoints themselves are still unauthenticated — for a real deployment, add a signed token (JWT) and middleware that validates it on every request.
+- **Auth on the API**: The endpoints are currently unauthenticated. For a real deployment, add an API key or session token middleware.
