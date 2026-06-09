@@ -1,33 +1,22 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (web)",
-            "type": "coreclr",
+            "name": "Python: FastAPI backend",
+            "type": "debugpy",
             "request": "launch",
-            "preLaunchTask": "build",
-            "program": "${workspaceFolder}/backend/Altius.Api/bin/Debug/net10.0/Altius.Api.dll",
-            "args": [],
-            "cwd": "${workspaceFolder}/backend/Altius.Api",
-            "stopAtEntry": false,
-            "serverReadyAction": {
-                "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
-            },
+            "module": "uvicorn",
+            "args": [
+                "main:app",
+                "--reload",
+                "--host", "0.0.0.0",
+                "--port", "8000"
+            ],
+            "cwd": "${workspaceFolder}/backend",
             "env": {
-                "ASPNETCORE_ENVIRONMENT": "Development"
+                "PYTHONPATH": "${workspaceFolder}/backend"
             },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            }
-        },
-        {
-            "name": ".NET Core Attach",
-            "type": "coreclr",
-            "request": "attach"
+            "jinja": true
         }
     ]
 }
